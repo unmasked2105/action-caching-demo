@@ -1,38 +1,37 @@
-name: CI with Caching
+name: Cache Demo
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  build-with-cache:
+  cache-job:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout code
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Set up uv
-        uses: astral-sh/setup-uv@v5
-      
-      - name: Create virtual environment
-        run: uv venv
-
-      - name: Cache uv dependencies
+      # Step 2: Prime cache
+      - name: prime-cache-5dc3582
+        id: cache-step
         uses: actions/cache@v4
-        id: cache-uv # Give the step an id to check its output
         with:
-          path: ~/.cache/uv
+          path: |
+            ~/.cache/demo-cache
           key: cache-5dc3582
 
-      - name: Install dependencies
-        run: uv pip install -r requirements.txt
-
-      - name: prime-cache-5dc3582
+      # Step 3: Echo cache result
+      - name: Echo cache hit/miss
         run: |
-          if [[ "${{ steps.cache-uv.outputs.cache-hit }}" == "true" ]]; then
-            echo "Cache hit! Dependencies were restored."
+          if [ "${{ steps.cache-step.outputs.cache-hit }}" == "true" ]; then
+            echo "Cache hit!"
           else
-            echo "Cache miss. Dependencies were installed and cache will be saved."
+            echo "Cache miss!"
+            # create some files in the cache path to store next time
+            mkdir -p ~/.cache/demo-cache
+            echo "Hello, cache!" > ~/.cache/demo-cache/file.txt
           fi
